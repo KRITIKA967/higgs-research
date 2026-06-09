@@ -276,6 +276,7 @@ If this project helped your research or coursework, please consider giving it a 
 
 Made with ❤️ for physics + machine learning research
 
-**[RUDRAIndia](https://github.com/RUDRAIndia)**
+**[RUDRAIndia](https://github.com/RUDRAIndia)** 
+**[KRITKA967](https://share.google/qARbH3R67XwCYD2s1)** 
 
 </div>
