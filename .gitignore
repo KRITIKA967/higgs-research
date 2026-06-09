@@ -1,0 +1,8 @@
+venv/
+HIGGS.csv
+data/
+results/*.npy
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+catboost_info/
