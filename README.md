@@ -1,116 +1,281 @@
-# HIGGS Boson Class Imbalance Benchmark
+# 🔬 HIGGS Boson — Class Imbalance Benchmark
 
-This repository contains a complete, unique, and publication-quality machine learning research project benchmark. It evaluates **5 class imbalance handling techniques** across **7 machine learning models** under **3 imbalance ratios** (a total of **105 experimental configurations**) using the **HIGGS Boson dataset** from the UCI Machine Learning Repository.
+<div align="center">
 
-Targeted for submission to arXiv and college course presentation, this repository provides self-contained Jupyter notebooks structured sequentially.
+![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)
+![XGBoost](https://img.shields.io/badge/XGBoost-2.1.1-orange?style=for-the-badge)
+![LightGBM](https://img.shields.io/badge/LightGBM-latest-green?style=for-the-badge)
+![CatBoost](https://img.shields.io/badge/CatBoost-latest-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-red?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
 
----
+**The most comprehensive class imbalance benchmark on the HIGGS UCI dataset.**
+*7 models × 5 techniques × 3 imbalance ratios = 105 experimental runs.*
 
-## ⚠️ CRITICAL RAM WARNING — READ BEFORE RUNNING CODE
+[📊 View Results](#-key-results) • [🚀 Quick Start](#-quick-start) • [📓 Notebooks](#-notebooks) • [📄 Paper](#-paper)
 
-The full `HIGGS.csv` dataset contains 11 million rows and requires approximately **8GB of RAM** just to load, which can easily exceed the limits of a standard 16GB RAM machine when training memory-intensive algorithms like Random Forest or CatBoost.
-
-- **`SAMPLE_MODE = True` is the default across all notebooks.** This loads a safe subset of **500,000 rows** (~1.5GB RAM usage).
-- **NEVER** change the default `SAMPLE_MODE` setting in source code to `False` unless you are executing the final overnight run.
-- Ensure all other heavy applications (e.g., Chrome, IDEs) are closed before attempting a full-dataset run (`SAMPLE_MODE = False`).
-- The code prints a clear RAM warning before every data load operation.
-
----
-
-## Physics Context & Dataset
-
-In particle physics, identifying the Higgs boson against background noise is a classic binary classification challenge:
-- **Class 1 (Signal)**: Higgs boson decay events.
-- **Class 0 (Background)**: Standard Model background processes.
-
-The raw dataset (`HIGGS.csv`, ~8GB) contains 11M rows and 28 physics-derived features:
-- Columns 2–22: Low-level kinematic features.
-- Columns 23–29: High-level physics features derived by physicists.
-
-No missing values exist in the dataset.
-
-### Imbalance Ratios (Versions)
-We construct three versions of the dataset:
-- **Version A (1:1)**: Original balance (approx. 53% signal, 47% background).
-- **Version B (1:10)**: Signal downsampled to 1/10th of the background count.
-- **Version C (1:50)**: Signal downsampled to 1/50th of the background count (extreme imbalance).
+</div>
 
 ---
 
-## Benchmark Details
+## 🌟 Why This Project?
 
-### Machine Learning Models
-1. **XGBoost**: Extreme Gradient Boosting.
-2. **LightGBM**: Fast, histogram-based gradient boosting.
-3. **Random Forest**: Bagging-based ensemble of decision trees.
-4. **CatBoost**: Categorical gradient boosting.
-5. **AdaBoost**: Adaptive boosting (with limitations).
-6. **Voting Ensemble (3-Model)**: Soft-voting combination of XGBoost, LightGBM, and Random Forest.
-7. **Voting Ensemble (4-Model)**: Soft-voting combination of XGBoost, LightGBM, Random Forest, and CatBoost.
+Every second, CERN's Large Hadron Collider produces millions of collision events. Finding a single Higgs boson signal buried in thousands of background events is one of the hardest classification problems in science.
 
-#### AdaBoost Limitations:
-- Does **not** support native `scale_pos_weight` parameter. Sample weights are manually computed using a balanced class weight formula and passed during training.
-- Does **not** support custom objectives (focal loss). Focal loss runs are skipped and replaced with a `class_weight='balanced'` equivalent.
-- Exhibits significantly slower execution times on large datasets compared to modern gradient-boosted trees.
-- Constraints are detailed as comments in [11_experiment10_adaboost.ipynb](file:///D:/higgs_Research/notebooks/11_experiment10_adaboost.ipynb).
+**The challenge:** At 1:50 signal-to-background ratio, a naive model achieves 98% accuracy by predicting *background for everything* — and catches **zero** Higgs bosons.
 
-### Class Imbalance Techniques
-1. **Baseline**: No modification, default classification threshold (0.5).
-2. **Class Weights**: Penalizes minority class misclassifications heavily.
-3. **SMOTE**: Synthetic Minority Over-sampling Technique. Applied exclusively to the training split.
-4. **Focal Loss**: A custom loss function that dynamically down-weights easy background examples and forces the model to focus on hard signal examples.
-5. **Threshold Optimization**: Decision threshold scanned from 0.1 to 0.9 on validation set, choosing the threshold that maximizes the F1-score.
+This project systematically answers: **which technique actually works, on which model, at which imbalance level?**
 
 ---
 
-## Folder Structure
+## 🏆 Key Results
+
+> All results on Version C (1:50 imbalance) — the hardest setting.
+
+| Rank | Model | Technique | AUC | F1 | Signal Z | 
+|------|-------|-----------|-----|-----|----------|
+| 🥇 | Voting 4-Model | Threshold Opt. | **0.7897** | 0.175 | 5.8 |
+| 🥈 | CatBoost | Focal Loss | 0.789 | **0.188** | 5.84 |
+| 🥉 | XGBoost | Focal Loss | 0.782 | 0.187 | **5.84** |
+| 4 | LightGBM | Focal Loss | 0.786 | 0.184 | 5.72 |
+| 5 | Voting 3-Model | Focal Loss | 0.784 | 0.189 | ~5.8 |
+| 6 | Random Forest | Class Weights | 0.755 | 0.085 | 4.60 |
+| 7 | AdaBoost | Any | 0.714 | 0.099 | 4.33 |
+
+> ⚛️ **Physics highlight:** XGBoost + Focal Loss achieves **Z = 5.84** — crossing the Z ≥ 5 particle physics discovery threshold.
+
+---
+
+## 📐 Project Architecture
 
 ```
-D:\higgs_Research\
-├── HIGGS.csv                              ← already exists (do not touch/move)
-├── requirements.txt                       ← project dependencies
-├── README.md                              ← this file
-├── data\                                  ← saved train/test CSVs
-├── figures\                               ← all PNG figures (dpi=300)
-├── results\                               ← all CSVs + .npy probability arrays
-├── notebooks\
-│   ├── 00_dataset_prep.ipynb              ← prepares data splits for versions A, B, C
-│   ├── 01_eda.ipynb                       ← exploratory data analysis & distributions
-│   ├── 02_experiment1_baseline_xgb.ipynb  ← XGBoost Baseline
-│   ├── 03_experiment2_class_weights_xgb.ipynb ← XGBoost Class Weights
-│   ├── 04_experiment3_smote_xgb.ipynb     ← XGBoost SMOTE
-│   ├── 05_experiment4_focal_loss_xgb.ipynb ← XGBoost Focal Loss + Threshold Opt.
-│   ├── 06_experiment5_threshold_xgb.ipynb  ← XGBoost Threshold Optimization
-│   ├── 07_experiment6_combined_xgb.ipynb   ← XGBoost Combined
-│   ├── 08_experiment7_lightgbm.ipynb      ← LightGBM Experiments (5 techniques)
-│   ├── 09_experiment8_random_forest.ipynb ← Random Forest Experiments (5 techniques)
-│   ├── 10_experiment9_catboost.ipynb      ← CatBoost Experiments (5 techniques)
-│   ├── 11_experiment10_adaboost.ipynb     ← AdaBoost Experiments (5 techniques)
-│   ├── 12_experiment11_voting_3model.ipynb ← 3-Model Voting Ensemble
-│   ├── 13_experiment12_voting_4model.ipynb ← 4-Model Voting Ensemble
-│   ├── 14_compile_results_xgb.ipynb       ← compiles and compares XGBoost runs
-│   └── 15_compile_results_v2_all_models.ipynb ← compiles and compares all 7 models
-└── utils\
-    ├── __init__.py                        ← makes utils a package
-    ├── data_loader.py                     ← dataset loaders & splits
-    └── metrics.py                         ← metrics: AUC, F1, Signal Significance
+HIGGS Boson (11M rows, 28 features)
+         │
+         ▼
+┌─────────────────────────────────────┐
+│         3 Imbalance Versions        │
+│  A (1:1)  │  B (1:10)  │  C (1:50) │
+└─────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│         5 Imbalance Techniques      │
+│  Baseline │ Class Weights │  SMOTE  │
+│     Focal Loss  │ Threshold Opt.    │
+└─────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│           7 ML Models               │
+│ XGBoost │ LightGBM │ Random Forest  │
+│ CatBoost │ AdaBoost │ Voting-3 │ V4 │
+└─────────────────────────────────────┘
+         │
+         ▼
+  105 Experimental Runs
+  AUC + F1 + Signal Significance Z
 ```
 
 ---
 
-## Execution Guide
+## 🚀 Quick Start
 
-To replicate this research project benchmark:
+### Prerequisites
 
-1. **Activate Virtual Environment**:
-   ```powershell
-   .\venv\Scripts\Activate.ps1
-   ```
-2. **Execute Prep and EDA**:
-   - Run `00_dataset_prep.ipynb` to construct and save dataset splits.
-   - Run `01_eda.ipynb` to verify distributions and create Figure 1 & Figure 7.
-3. **Execute Model Notebooks**:
-   - Run notebooks `02` through `13` in order to train and evaluate all models. Each notebook writes output metrics to the `results/` folder and saves test probabilities.
-4. **Compile Results**:
-   - Run `14_compile_results_xgb.ipynb` to generate XGBoost-specific comparative analyses.
-   - Run `15_compile_results_v2_all_models.ipynb` to produce comparative tables and the final plots for the paper (ROC curves, F1-scores, AUC, Signal Significance, and Training Times).
+| Tool | Version | Check |
+|------|---------|-------|
+| Python | 3.12 (64-bit) | `py -3.12 --version` |
+| Git | Any | `git --version` |
+| Git LFS | Any | `git lfs version` |
+
+### Installation
+
+```powershell
+# 1. Clone the repo
+git clone https://github.com/RUDRAIndia/higgs-research.git
+cd higgs-research
+
+# 2. Create virtual environment (64-bit Python 3.12)
+py -3.12 -m venv venv
+.\venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Register Jupyter kernel
+python -m ipykernel install --user --name=higgs_venv --display-name "higgs_venv"
+
+# 5. Download HIGGS.csv and place in project root
+# https://archive.ics.uci.edu/dataset/280/higgs
+# (~7.5 GB unzipped)
+```
+
+> ⚠️ **RAM Warning:** Full dataset requires ~8GB RAM. Default `SAMPLE_MODE = True` loads 500k rows safely. Flip to `False` only for the final overnight run.
+
+---
+
+## 📓 Notebooks
+
+Run in this exact order:
+
+| # | Notebook | Description | Time (Sample) |
+|---|----------|-------------|---------------|
+| 00 | `00_dataset_prep.ipynb` | Load HIGGS, create 3 versions, save splits | ~2 min |
+| 01 | `01_eda.ipynb` | Class distributions, feature histograms | ~1 min |
+| 02 | `02_experiment1_baseline_xgb.ipynb` | XGBoost — no imbalance handling | ~5 min |
+| 03 | `03_experiment2_class_weights_xgb.ipynb` | XGBoost + scale_pos_weight | ~5 min |
+| 04 | `04_experiment3_smote_xgb.ipynb` | XGBoost + SMOTE oversampling | ~10 min |
+| 05 | `05_experiment4_focal_loss_xgb.ipynb` | XGBoost + Focal Loss + Threshold | ~8 min |
+| 06 | `06_experiment5_threshold_xgb.ipynb` | XGBoost + Threshold Optimization | ~5 min |
+| 07 | `07_experiment6_combined_xgb.ipynb` | XGBoost + Class Weights + Threshold | ~5 min |
+| 08 | `08_experiment7_lightgbm.ipynb` | LightGBM × 5 techniques | ~15 min |
+| 09 | `09_experiment8_random_forest.ipynb` | Random Forest × 5 techniques | ~20 min |
+| 10 | `10_experiment9_catboost.ipynb` | CatBoost × 5 techniques | ~20 min |
+| 11 | `11_experiment10_adaboost.ipynb` | AdaBoost × 5 techniques ⚠️ | ~30 min |
+| 12 | `12_experiment11_voting_3model.ipynb` | XGB + LGB + RF ensemble | ~25 min |
+| 13 | `13_experiment12_voting_4model.ipynb` | XGB + LGB + RF + CAT ensemble | ~30 min |
+| 14 | `14_compile_results_xgb.ipynb` | XGBoost figures + tables | ~2 min |
+| 15 | `15_compile_results_v2_all_models.ipynb` | Master comparison all models | ~3 min |
+
+**Total sample mode: ~3-4 hours | Full run: ~8-15 hours overnight**
+
+---
+
+## 📊 Evaluation Metrics
+
+| Metric | Formula | Why it matters |
+|--------|---------|----------------|
+| **AUC** | Area under ROC curve | Standard ML benchmark, threshold-independent |
+| **F1-score** | 2·P·R / (P+R) | Directly measures minority class detection |
+| **Signal Significance** | Z = S / √(S+B) | Physics standard — Z ≥ 5 = discovery |
+
+> Accuracy is intentionally excluded — at 1:50 imbalance, a model predicting all-background achieves 98% accuracy while catching zero signal events.
+
+---
+
+## 🧪 The 5 Techniques
+
+```
+┌──────────────────┬───────────────────────────────────────────────────┐
+│ Baseline         │ Standard training. Shows how bad things get.       │
+├──────────────────┼───────────────────────────────────────────────────┤
+│ Class Weights    │ scale_pos_weight = n_background / n_signal         │
+│                  │ No data modification. Fastest technique.           │
+├──────────────────┼───────────────────────────────────────────────────┤
+│ SMOTE            │ Synthetic minority oversampling on X_train only.   │
+│                  │ Version A capped at 500k rows (CPU constraint).    │
+├──────────────────┼───────────────────────────────────────────────────┤
+│ Focal Loss       │ FL = -(1-p)^γ · log(p), γ=2.0                     │
+│                  │ Down-weights easy examples. From RetinaNet (2017). │
+├──────────────────┼───────────────────────────────────────────────────┤
+│ Threshold Opt.   │ Scan 0.1→0.9 on validation, pick best F1.         │
+│                  │ Default 0.5 is wrong for imbalanced data.          │
+└──────────────────┴───────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 Output Files
+
+### Figures (`figures/`)
+
+| File | Description | Paper Section |
+|------|-------------|---------------|
+| `fig1_class_distribution.png` | Class counts across versions | Section 4 |
+| `fig2_auc_comparison.png` | AUC — all models at Version C | Section 6 |
+| `fig3_f1_comparison.png` | F1 — all models at Version C | Section 6 |
+| `fig4_sig_comparison.png` | Signal Z with Z=5 threshold line | Section 6 |
+| `fig5_time_comparison.png` | Training time (log scale) | Section 7 |
+| `fig6_roc_curves.png` | ROC curves — best configs | Section 6 |
+| `fig7_feature_distributions.png` | Feature histograms | Section 4 |
+
+### Results (`results/`)
+
+| File | Description |
+|------|-------------|
+| `experiment[1-12]_*.csv` | Per-experiment metrics |
+| `all_experiments_compiled.csv` | Master table all 105 runs |
+| `ranked_best_per_model_version_C.csv` | Best technique per model |
+
+---
+
+## ⚠️ AdaBoost Limitations
+
+AdaBoost is included for benchmark completeness but has known constraints:
+
+- ❌ No `scale_pos_weight` → uses manual `sample_weight` instead
+- ❌ No custom objective → focal loss replaced with balanced class weights
+- 🐌 Significantly slower than XGBoost/LightGBM on large datasets
+- 📉 Worst overall performance (AUC 0.714 at Version C)
+
+These limitations are documented as paper findings, not bugs.
+
+---
+
+## 🔧 Hardware & Environment
+
+| Spec | Value |
+|------|-------|
+| CPU | Intel i5-10400 @ 2.90GHz |
+| RAM | 16 GB |
+| GPU | None (CPU only) |
+| OS | Windows 11, 64-bit |
+| Python | 3.12 (64-bit) |
+| Key packages | XGBoost 2.1.1, LightGBM latest, CatBoost latest |
+
+> All experiments reproducible with `random_state=42` everywhere.
+
+---
+
+## 📄 Paper
+
+This project produces all figures and tables for a research paper structured as:
+
+| Section | Content |
+|---------|---------|
+| Abstract | Problem, dataset, methods, Z=5.84 headline result |
+| Introduction | HEP classification, why imbalance matters |
+| Related Work | Baldi 2014, SMOTE (Chawla 2002), Focal Loss (Lin 2017) |
+| Dataset | HIGGS UCI, 3 imbalance versions |
+| Methodology | 5 techniques, 7 models, 3 metrics |
+| Results | 15 experimental tables, 7 figures |
+| Discussion | Which technique wins and when |
+| Conclusion | Answer 3 research questions |
+
+**Headline result for abstract:** *XGBoost + Focal Loss achieves Signal Significance Z = 5.84, crossing the particle physics discovery threshold of Z ≥ 5 at 1:50 imbalance.*
+
+---
+
+## 🤝 Contributing
+
+Found a bug or want to add a new technique/model? PRs are welcome.
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/new-technique`
+3. Add your notebook following the existing naming convention
+4. Submit a PR with results CSV included
+
+---
+
+## 📚 References
+
+- Baldi et al. (2014). *Searching for Exotic Particles in High-Energy Physics with Deep Learning.* Nature Communications.
+- Chawla et al. (2002). *SMOTE: Synthetic Minority Over-sampling Technique.* JAIR.
+- Lin et al. (2017). *Focal Loss for Dense Object Detection.* ICCV (RetinaNet).
+- Chen & Guestrin (2016). *XGBoost: A Scalable Tree Boosting System.* KDD.
+
+---
+
+## ⭐ Star This Repo
+
+If this project helped your research or coursework, please consider giving it a ⭐ — it helps others find it.
+
+---
+
+<div align="center">
+
+Made with ❤️ for physics + machine learning research
+
+**[RUDRAIndia](https://github.com/RUDRAIndia)**
+
+</div>
